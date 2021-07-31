@@ -109,23 +109,22 @@ class Board():
                 if hex.mouse == True: # If the hexagon has the mouse
                     self.mouse = hex
 
+        #Find the hole
+        for hex in self.graph.nodes: # Iterate through every hexagon
+                if hex.hole == True: # If the hexagon has the mouse
+                    self.hole = hex
+
     #Update the board
     def update(self):        
         #Mouse's Turn
         if self.turn == 'M':
 
             #Find next path
-            nextHex = ''
-            nbrs = []
-            for nbr in self.graph.adj[self.mouse]:
-                if not(nbr.wall) and (nbr != self.mouse):
-                    nbrs.append(nbr)
-
+            nextHex = self.mouse
             try: # Check to see if a path can be made
-                nextHex = random.choice(nbrs) # Select the next hexagon
+                nextHex = next_path(self.graph, self.mouse, self.hole) # Select the next hexagon
             except:
                 nextHex = self.mouse # Do not change choices
-
 
             self.mouse.mouse = False # Remove mouse from previous hexagon
             self.mouse = nextHex # Change the next hexagon to the mouse
@@ -138,10 +137,36 @@ class Board():
             self.turn = hex.update(self.turn) # Update each hexagon
 
 # Shortest Path Algorthim
-def next_path(graph):
-    pass
+def next_path(graph, startNode, endNode):
+    #Check if the algorithim requirements are met
+    if startNode not in graph.nodes or endNode not in graph.nodes:
+        return startNode
     
+    #Initalise algorithim variables
+    visited = []
+    unvisited = []
+    unvisited.extend(graph.nodes)
+    path = []
+    currentNode = startNode
+    nextNode = startNode
 
+    #Algorthim Loop
+    while endNode not in path:
+        #Choose the next node to add to the path
+        if set(graph.adj[currentNode].keys()) <= set(visited): # If all the neighbours have been visited
+            nextNode = path[-1]
+            path.pop(-1)        
+        else: 
+            while nextNode in visited: # While the node being chosen has been visited
+                nextNode = random.choice(list(graph.adj[currentNode])) # Choose a neigbhbouring node
+            path.append(nextNode) # Add the node to the path
+            unvisited.remove(nextNode) # Remove from the unvisited list
+            visited.append(nextNode) # Add to the visited list
+        currentNode = nextNode # Move to the next node
+
+    return path[1]
+
+    
 
 #--- Game Board ---
 hexagons = nx.Graph() # Initalise the hexagon graph
