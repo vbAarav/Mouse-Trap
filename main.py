@@ -122,7 +122,7 @@ class Board():
             #Find next path
             nextHex = self.mouse
             try: # Check to see if a path can be made
-                nextHex = next_path(self.graph, self.mouse, self.hole) # Select the next hexagon
+                nextHex = next_path(self.graph, self.mouse, self.hole)
             except:
                 nextHex = self.mouse # Do not change choices
 
@@ -136,9 +136,16 @@ class Board():
         for hex in self.graph.nodes: # Iterate through every hexagon
             self.turn = hex.update(self.turn) # Update each hexagon
 
+        #Get all of the walls
+        walls = []
+        for hex in self.graph.nodes:
+            if hex.wall:
+                walls.append(hex)       
+
 # Shortest Path Algorthim
-def next_path(graph, startNode, endNode):
+def next_path(graph, startNode, endNode, exceptions=[]):
     #Check if the algorithim requirements are met
+    graph.remove_nodes_from(exceptions)
     if startNode not in graph.nodes or endNode not in graph.nodes:
         return startNode
     
@@ -164,6 +171,7 @@ def next_path(graph, startNode, endNode):
             visited.append(nextNode) # Add to the visited list
         currentNode = nextNode # Move to the next node
 
+    print(path)
     return path[1]
 
     
