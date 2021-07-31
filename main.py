@@ -26,7 +26,6 @@ BOARDY = 50
 screen = pygame.display.set_mode((WIDTH, HEIGHT)) # Display the screen
 clock = pygame.time.Clock() # Get the clock
 
-
 #--- Hexagon ---
 class Hexagon(pygame.sprite.Sprite):
 
@@ -136,12 +135,6 @@ class Board():
         for hex in self.graph.nodes: # Iterate through every hexagon
             self.turn = hex.update(self.turn) # Update each hexagon
 
-        #Get all of the walls
-        walls = []
-        for hex in self.graph.nodes:
-            if hex.wall:
-                walls.append(hex)       
-
 # Shortest Path Algorthim
 def next_path(graph, startNode, endNode, exceptions=[]):
     #Check if the algorithim requirements are met
@@ -171,10 +164,7 @@ def next_path(graph, startNode, endNode, exceptions=[]):
             visited.append(nextNode) # Add to the visited list
         currentNode = nextNode # Move to the next node
 
-    print(path)
-    return path[1]
-
-    
+    return path[1]    
 
 #--- Game Board ---
 hexagons = nx.Graph() # Initalise the hexagon graph
@@ -226,9 +216,7 @@ while gameLoop: # Run game loop
 
         if event.type == pygame.MOUSEBUTTONDOWN: # Mouse Press Event
             if (event.button == 1):
-                pass
-
-    
+                pass    
 
     #Update display
     gameBoard.update()
