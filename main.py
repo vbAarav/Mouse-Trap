@@ -2,8 +2,8 @@
 import pygame
 import random
 import networkx as nx
-import matplotlib.pyplot as plt
 import sys
+from time import sleep
 
 #Initalise modules
 pygame.init()
@@ -125,23 +125,19 @@ class Board():
                     self.hole = hex
 
     #Update the board
-    def update(self):        
+    def update(self):
         #Mouse's Turn
         if self.turn == 'M':
 
             #Find next path
             nextHex = random.choice(list(self.graph.adj[self.mouse]))
-            try:
-                while nextHex.wall: # Check if the next path can be traced
-                    nextHex = next_path(self.graph, self.mouse, self.hole)
-                if nextHex == None:
-                    return 'W'
-            except:
-                nextHex = self.mouse
-
-            self.mouse.mouse = False # Remove mouse from previous hexagon
-            self.mouse = nextHex # Change the next hexagon to the mouse
-            nextHex.mouse = True # Set next hexagon to have the mouse state
+            nextHex = next_path(self.graph.subgraph([node for node in self.graph.nodes if not(node.wall)]), self.mouse, self.hole)
+            if nextHex == None:
+                return True
+            else:
+                self.mouse.mouse = False # Remove mouse from previous hexagon
+                self.mouse = nextHex # Change the next hexagon to the mouse
+                nextHex.mouse = True # Set next hexagon to have the mouse state
 
             self.turn = 'P'
 
@@ -170,13 +166,13 @@ def next_path(graph, startNode, endNode):
 
     #Algorthim Loop
     while endNode not in path:
-        #Check for win condition
-        if visited == graph.nodes:
-            return None
         #Choose the next node to add to the path
         if set(graph.adj[currentNode].keys()) <= set(visited): # If all the neighbours have been visited
-            nextNode = path[-1]
-            path.pop(-1)        
+            try: # Find the next node
+                nextNode = path[-1]
+                path.pop(-1)
+            except: # If there is no path
+                break        
         else: 
             while nextNode in visited: # While the node being chosen has been visited
                 nextNode = random.choice(list(graph.adj[currentNode])) # Choose a neigbhbouring node
@@ -185,11 +181,10 @@ def next_path(graph, startNode, endNode):
             visited.append(nextNode) # Add to the visited list
         currentNode = nextNode # Move to the next node
 
-    return path[1]    
-
-
-
-
+    try:
+        return path[1] # Return next hexagon
+    except:
+        return None # Return no hexagon
 
 
 #--- Game Board ---
@@ -240,11 +235,9 @@ while gameLoop: # Run game loop
         if event.type == pygame.QUIT: # Quit Event
             gameLoop = False
 
-        if event.type == pygame.MOUSEBUTTONDOWN: # Mouse Press Event
-            if (event.button == 1):
-                pass    
-
     #Update display
-    gameBoard.update()    
+    state = gameBoard.update()
+    if state:
+        print('Win')
+        gameLoop = False
     pygame.display.update()
-
