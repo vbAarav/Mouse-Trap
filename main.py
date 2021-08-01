@@ -168,17 +168,10 @@ def next_path(graph, startNode, endNode):
     currentNode = startNode
     nextNode = startNode
 
-    #Remove wall nodes
-    for node in graph.nodes:
-        if node.wall:
-            unvisited.remove(node)
-
-    graphNodes = unvisited # Temporary values to store all of the nodes in the algorthim
-
     #Algorthim Loop
     while endNode not in path:
         #Check for win condition
-        if visited == graphNodes:
+        if visited == graph.nodes:
             return None
         #Choose the next node to add to the path
         if set(graph.adj[currentNode].keys()) <= set(visited): # If all the neighbours have been visited
