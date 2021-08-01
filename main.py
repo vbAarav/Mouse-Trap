@@ -3,6 +3,7 @@ import pygame
 import random
 import networkx as nx
 import matplotlib.pyplot as plt
+import sys
 
 #Initalise modules
 pygame.init()
@@ -25,6 +26,11 @@ BOARDY = 50
 #Pygame Settings
 screen = pygame.display.set_mode((WIDTH, HEIGHT)) # Display the screen
 clock = pygame.time.Clock() # Get the clock
+
+
+
+
+
 
 #--- Hexagon ---
 class Hexagon(pygame.sprite.Sprite):
@@ -95,7 +101,12 @@ class Hexagon(pygame.sprite.Sprite):
 
         #Return the next turn
         return turn
-        
+
+
+
+
+
+
 #--- Board ---
 class Board():
     #Initalise the class
@@ -119,11 +130,14 @@ class Board():
         if self.turn == 'M':
 
             #Find next path
-            nextHex = self.mouse
-            try: # Check to see if a path can be made
-                nextHex = next_path(self.graph, self.mouse, self.hole)
+            nextHex = random.choice(list(self.graph.adj[self.mouse]))
+            try:
+                while nextHex.wall: # Check if the next path can be traced
+                    nextHex = next_path(self.graph, self.mouse, self.hole)
+                if nextHex == None:
+                    return 'W'
             except:
-                nextHex = self.mouse # Do not change choices
+                nextHex = self.mouse
 
             self.mouse.mouse = False # Remove mouse from previous hexagon
             self.mouse = nextHex # Change the next hexagon to the mouse
@@ -135,12 +149,16 @@ class Board():
         for hex in self.graph.nodes: # Iterate through every hexagon
             self.turn = hex.update(self.turn) # Update each hexagon
 
+
+
+
+
+
 # Shortest Path Algorthim
-def next_path(graph, startNode, endNode, exceptions=[]):
+def next_path(graph, startNode, endNode):
     #Check if the algorithim requirements are met
-    graph.remove_nodes_from(exceptions)
     if startNode not in graph.nodes or endNode not in graph.nodes:
-        return startNode
+        return startNode    
     
     #Initalise algorithim variables
     visited = []
@@ -150,8 +168,18 @@ def next_path(graph, startNode, endNode, exceptions=[]):
     currentNode = startNode
     nextNode = startNode
 
+    #Remove wall nodes
+    for node in graph.nodes:
+        if node.wall:
+            unvisited.remove(node)
+
+    graphNodes = unvisited # Temporary values to store all of the nodes in the algorthim
+
     #Algorthim Loop
     while endNode not in path:
+        #Check for win condition
+        if visited == graphNodes:
+            return None
         #Choose the next node to add to the path
         if set(graph.adj[currentNode].keys()) <= set(visited): # If all the neighbours have been visited
             nextNode = path[-1]
@@ -165,6 +193,11 @@ def next_path(graph, startNode, endNode, exceptions=[]):
         currentNode = nextNode # Move to the next node
 
     return path[1]    
+
+
+
+
+
 
 #--- Game Board ---
 hexagons = nx.Graph() # Initalise the hexagon graph
@@ -219,5 +252,6 @@ while gameLoop: # Run game loop
                 pass    
 
     #Update display
-    gameBoard.update()
+    gameBoard.update()    
     pygame.display.update()
+
