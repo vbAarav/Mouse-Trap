@@ -219,7 +219,9 @@ hexagons.add_edges_from([
                             (G1, H1), (G1, H2), (H1, I1), (H2, I1),
                             (I1, J1), (I1, J2), (J1, K1), (J2, K1),
                             (D2, E2), (F2, E2), (F2, F3), (F3, G2),
-                            (H2, I2), (J2, I2), (I2, H3), (H3, G2)
+                            (H2, I2), (J2, I2), (I2, H3), (H3, G2),
+                            (B1, B2), (D1, D2), (F1, F2), (H1, H2),
+                            (J1, J2)
                             
                         ]) 
 gameBoard = Board(hexagons) # Initalse the game board
