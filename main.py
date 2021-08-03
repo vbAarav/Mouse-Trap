@@ -2,8 +2,7 @@
 import pygame
 import random
 import networkx as nx
-import sys
-from time import sleep
+
 
 #Initalise modules
 pygame.init()
@@ -21,7 +20,7 @@ HEIGHT = 800
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 BOARDX = 350
-BOARDY = 50
+BOARDY = 120
 
 #Pygame Settings
 screen = pygame.display.set_mode((WIDTH, HEIGHT)) # Display the screen
@@ -65,12 +64,24 @@ class Hexagon(pygame.sprite.Sprite):
             self.burrow = True
         else:
             self.burrow = False
-        
+
+        #When this object is printed to the terminal
+    def __str__(self):
+        return f'''
+                Position:
+                    X - {self.x}
+                    Y - {self.y}
+                States:
+                    Mouse - {self.mouse}
+                    Burrow - {self.burrow}
+                    Hole - {self.burrow}
+                    Wall - {self.wall}
+
+                '''        
 
     #Check if object is being clicked method
     def is_clicked(self):
         return pygame.mouse.get_pressed()[0] and self.rect.collidepoint(pygame.mouse.get_pos())
-    
     #Update the image
     def update(self, turn):
         #Check if the object has been clicked
@@ -132,8 +143,8 @@ class Board():
             #Find next path
             nextHex = random.choice(list(self.graph.adj[self.mouse]))
             nextHex = next_path(self.graph.subgraph([node for node in self.graph.nodes if not(node.wall)]), self.mouse, self.hole)
-            if nextHex == None:
-                return True
+            if nextHex == 'W' or nextHex == 'L':
+                return nextHex
             else:
                 self.mouse.mouse = False # Remove mouse from previous hexagon
                 self.mouse = nextHex # Change the next hexagon to the mouse
@@ -181,48 +192,45 @@ def next_path(graph, startNode, endNode):
             visited.append(nextNode) # Add to the visited list
         currentNode = nextNode # Move to the next node
 
+    #Check for win condition or return next path
     try:
-        return path[1] # Return next hexagon
+        if startNode in path: # Check if the start node was included in the path
+            if path[1].hole:
+                return 'L'
+            return path[1] # Return next hexagon
+        else:
+            if path[0].hole:
+                return 'L'
+            return path[0] # Return next hexagon
     except:
-        return None # Return no hexagon
+        return 'W' # Return no hexagon
 
 
 #--- Game Board ---
 hexagons = nx.Graph() # Initalise the hexagon graph
 A1 = Hexagon(x=BOARDX, y=BOARDY)
-B1 = Hexagon(x=BOARDX - 64, y=BOARDY + 64)
-B2 = Hexagon(x=BOARDX + 64, y=BOARDY + 64)
-C1 = Hexagon(x=BOARDX, y=BOARDY + (64 * 2), states=['hole'])
-D1 = Hexagon(x=BOARDX - 64, y=BOARDY + (64 * 3))
-D2 = Hexagon(x=BOARDX + 64, y=BOARDY + (64 * 3))
-E1 = Hexagon(x=BOARDX, y=BOARDY + (64 * 4))
-E2 = Hexagon(x=BOARDX + (64 * 2), y=BOARDY + (64 * 4), states=['burrow'])
-F1 = Hexagon(x=BOARDX - 64, y=BOARDY + (64 * 5))
-F2 = Hexagon(x=BOARDX + 64, y=BOARDY + (64 * 5))
-F3 = Hexagon(x=BOARDX + (64 * 3), y=BOARDY + (64 * 5), states=['burrow'])
-G1 = Hexagon(x=BOARDX, y=BOARDY + (64 * 6))
-G2 = Hexagon(x=BOARDX + (64 * 4), y=BOARDY + (64 * 6), states=['burrow'])
-H1 = Hexagon(x=BOARDX - 64, y=BOARDY + (64 * 7))
-H2 = Hexagon(x=BOARDX + 64, y=BOARDY + (64 * 7))
-H3 = Hexagon(x=BOARDX + (64 * 3), y=BOARDY + (64 * 7), states=['burrow'])
-I1 = Hexagon(x=BOARDX, y=BOARDY + (64 * 8), states=['mouse'])
-I2 = Hexagon(x=BOARDX + (64 * 2), y=BOARDY + (64 * 8), states=['burrow'])
-J1 = Hexagon(x=BOARDX - 64, y=BOARDY + (64 * 9))
-J2 = Hexagon(x=BOARDX + 64, y=BOARDY + (64 * 9))
-K1 = Hexagon(x=BOARDX, y=BOARDY + (64 * 10))
+A2 = Hexagon(x=BOARDX + 48, y=BOARDY + (64 * 0.5))
+A3 = Hexagon(x=BOARDX + (48 * 2), y=BOARDY, states=['hole'])
+B1 = Hexagon(x=BOARDX, y=BOARDY + 64)
+B2 = Hexagon(x=BOARDX + 48, y=BOARDY + (64 * 1.5), states=['burrow'])
+B3 = Hexagon(x=BOARDX + (48 * 2), y=BOARDY + 64)
+C1 = Hexagon(x=BOARDX, y=BOARDY + (64 * 2))
+C2 = Hexagon(x=BOARDX + 48, y = BOARDY + (64 * 2.5), states=['burrow'])
+C3 = Hexagon(x=BOARDX + (48 * 2), y=BOARDY + (64 * 2))
+D1 = Hexagon(x=BOARDX, y=BOARDY + (64 * 3), states=['mouse'])
+D2 = Hexagon(x=BOARDX + 48, y=BOARDY + (64 * 3.5))
+D3 = Hexagon(x=BOARDX + (48 * 2), y=BOARDY + (64 * 3))
 
-hexagons.add_nodes_from([A1, B1, B2, C1, D1, D2, E1, E2, F1, F2, F3, G1, G2, H1, H2, H3, I1, I2, J1, J2, K1]) # Add the hexagons
+hexagons.add_nodes_from([A1, A2, A3, B1, B2, B3, C1, C2, C3, D1, D2, D3]) # Add the hexagons
 hexagons.add_edges_from([
-                            (A1, B1), (A1, B2), (B1, C1), (B2, C1),
-                            (C1, D1), (C1, D2), (D1, E1), (D2, E1),
-                            (E1, F1), (E1, F2), (F1, G1), (F2, G1),    # Add the indiviual choices
-                            (G1, H1), (G1, H2), (H1, I1), (H2, I1),
-                            (I1, J1), (I1, J2), (J1, K1), (J2, K1),
-                            (D2, E2), (F2, E2), (F2, F3), (F3, G2),
-                            (H2, I2), (J2, I2), (I2, H3), (H3, G2),
-                            (B1, B2), (D1, D2), (F1, F2), (H1, H2),
-                            (J1, J2)
-                            
+                           (A1, B1), (B1, C1), (C1, D1),
+                           (A2, A1), (A2, B1), (A2, B2),
+                           (B2, B1), (B2, C1), (B2, C2),
+                           (C2, C1), (C2, D1), (C2, D2),
+                           (D2, D1), (A3, A2), (A3, B3),
+                           (B3, A2), (B3, B2), (B3, C3),
+                           (C3, B2), (C3, C2), (C3, D3),
+                           (D3, C2), (D3, D2)                        # Add the indiviual choices
                         ]) 
 gameBoard = Board(hexagons) # Initalse the game board
 
@@ -239,7 +247,10 @@ while gameLoop: # Run game loop
 
     #Update display
     state = gameBoard.update()
-    if state:
+    if state == 'W':
         print('Win')
+        gameLoop = False
+    elif state == 'L':
+        print('Lose')
         gameLoop = False
     pygame.display.update()
