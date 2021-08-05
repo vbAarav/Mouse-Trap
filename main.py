@@ -82,6 +82,7 @@ class Hexagon(pygame.sprite.Sprite):
     #Check if object is being clicked method
     def is_clicked(self):
         return pygame.mouse.get_pressed()[0] and self.rect.collidepoint(pygame.mouse.get_pos())
+
     #Update the image
     def update(self, turn):
         #Check if the object has been clicked
@@ -212,10 +213,10 @@ A1 = Hexagon(x=BOARDX, y=BOARDY)
 A2 = Hexagon(x=BOARDX + 48, y=BOARDY + (64 * 0.5))
 A3 = Hexagon(x=BOARDX + (48 * 2), y=BOARDY, states=['hole'])
 B1 = Hexagon(x=BOARDX, y=BOARDY + 64)
-B2 = Hexagon(x=BOARDX + 48, y=BOARDY + (64 * 1.5), states=['burrow'])
+B2 = Hexagon(x=BOARDX + 48, y=BOARDY + (64 * 1.5))
 B3 = Hexagon(x=BOARDX + (48 * 2), y=BOARDY + 64)
 C1 = Hexagon(x=BOARDX, y=BOARDY + (64 * 2))
-C2 = Hexagon(x=BOARDX + 48, y = BOARDY + (64 * 2.5), states=['burrow'])
+C2 = Hexagon(x=BOARDX + 48, y = BOARDY + (64 * 2.5))
 C3 = Hexagon(x=BOARDX + (48 * 2), y=BOARDY + (64 * 2))
 D1 = Hexagon(x=BOARDX, y=BOARDY + (64 * 3), states=['mouse'])
 D2 = Hexagon(x=BOARDX + 48, y=BOARDY + (64 * 3.5))
