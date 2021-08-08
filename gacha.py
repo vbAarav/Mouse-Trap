@@ -6,7 +6,7 @@ import random
 pygame.init()
 
 #Constants
-WINDOW_WIDTH, WINDOW_HEIGHT  = 840, 480
+WINDOW_WIDTH, WINDOW_HEIGHT  = 1280, 480
 
 #Colors
 BLACK = 0, 0, 0
@@ -34,7 +34,7 @@ class Banner():
     def summon(self):
         num = random.randint(1, 100)
         if num <= self.funitRate:
-            return random.choice(self.funits)
+            return '-' + random.choice(self.funits)
         else:
             return random.choice(self.units)
 
@@ -85,8 +85,8 @@ def show_units(unit):
         screen.blit(label, (65, 95)) # Draw the unit
     elif type(unit) == list: # If the input is a multi summon
         #Local Draw Variables
-        lx = 65
-        ly = 95
+        lx = 80
+        ly = 96
 
         #Iterate through all the units
         for u in unit:
@@ -97,20 +97,24 @@ def show_units(unit):
                 label = font.render(f'{u}', True, WHITE)
                 
             screen.blit(label, (lx, ly))
-            if lx >= 525:
-                ly += 25
-                lx = 65            
+            if lx >= 900:
+                ly += 24
+                lx = 80            
             else:
-                lx += 125
+                lx += 240
             
 
     
 
 
 #Mechanic Initialisation
-singleButton = Button(65, 300, 200, 100,'Single Summon')
-multiButton = Button(365, 300, 200, 100,'Multi Summon')
-banner = Banner(['Loki', 'Cell', 'Moni', 'Freddy', 'Crewmate'], ['-Blue Masked Mash', '-Flipili', '-Loki Cell', '-Impostor', '-Golden Freddy'], 5)
+singleButton = Button(320, 300, 200, 100, 'Single Summon')
+multiButton = Button(760, 300, 200, 100, 'Multi Summon')
+allUnits = [
+    'Loki', 'Cell', 'Moni', 'Moni Requiem', 'Mash', 'Mash (Blue Masked)', 'Alligator Loki', 'Flipili', 'Impostor (Silohuete)'
+           ]
+
+banner = Banner(allUnits, ['Moni Requiem', 'Impostor (Silohuete)'], 5)
 
 #Game Loop
 gameLoop = True
