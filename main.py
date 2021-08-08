@@ -5,12 +5,19 @@ import networkx as nx
 
 #Initalise modules
 pygame.init()
+fsettings = open('settings.txt', 'r')
+settings = {}
+
+#Intialise settings
+for line in fsettings.readlines():
+    name, val = line.split('=')
+    settings[name] = val
 
 
 #Board Variables
 hexagonImg = pygame.image.load('assets/hexagon.png')
 wallImg = pygame.image.load('assets/wall.png')
-mouseImg = pygame.image.load('assets/moni_mouse.png')
+mouseImg = pygame.image.load('assets/' + settings['skin'])
 holeImg = pygame.image.load('assets/hole.png')
 burrowImg = pygame.image.load('assets/burrow.png')
 
@@ -26,6 +33,8 @@ BOARDY = 120
 screen = pygame.display.set_mode((WIDTH, HEIGHT)) # Display the screen
 clock = pygame.time.Clock() # Get the clock
 
+#Close files
+fsettings.close()
 
 
 
