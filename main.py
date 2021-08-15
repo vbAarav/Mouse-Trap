@@ -15,6 +15,7 @@ WIDTH = 800
 HEIGHT = 800
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
+RED = (255, 0, 0)
 BOARDX = 350
 BOARDY = 120
 
@@ -205,8 +206,7 @@ class MainGame():
 
     #Initalise the game
     def __init__(self, width, height):
-        pygame.init() # Initialise the pygame module
-        self.font = pygame.font.Font('freesansbold.ttf', 22) # Initalise the font
+        self.font = 'freesansbold.ttf' # Initalise the font
 
         #Settings
         self.settings = {} # Initalise the setting values
@@ -225,13 +225,15 @@ class MainGame():
         self.fsettings.close()
 
         #Pygame Settings
-        self.screen = pygame.display.set_mode((WIDTH, HEIGHT)) # Display the screen
+        self.screen = pygame.display.set_mode((width, height)) # Display the screen
         self.clock = pygame.time.Clock() # Get the clock
         self.gameLoop = True
+        self.running = True
 
     #Draw Text
-    def draw_text(self, text, font, screen, color, x, y):
-        text_surface = font.render(text, True, color) # Render the text on the surface
+    def draw_text(self, text, font, size, screen, color, x, y):
+        text_font = pygame.font.Font(font, size) # Initalise the font
+        text_surface = text_font.render(text, True, color) # Render the text on the surface
         text_rect = text_surface.get_rect() # Get the rectangle object of the text
         text_rect.center = (x, y) # Center the text to the position
         screen.blit(text_surface, text_rect)
@@ -292,15 +294,19 @@ class MainGame():
             #Check for events
             for event in pygame.event.get():
                 if event.type == pygame.QUIT: # Quit Event
-                    self.gameLoop = False                    
+                    self.gameLoop = False
+                    self.running = False
+                    break                   
 
             #Update the game board
             state = self.gameBoard.update()
             if state == 'W':
+                self.draw_text('Win', self.font, 64, self.screen, WHITE, 200, 200)
                 print('Win')
                 self.gameLoop = False
 
             elif state == 'L':
+                self.draw_text('Lose', self.font, 64, self.screen, WHITE, 200, 200)
                 print('Lose')
                 self.gameLoop = False
 
@@ -311,5 +317,77 @@ class MainGame():
 
 
 
-G = MainGame(WIDTH, HEIGHT)
-G.run()
+
+
+
+# --- Menu ---
+class Menu():
+
+    #Intialise the menu class
+    def __init__(self, width, height):
+        pygame.init() # Initialise the pygame module
+        self.playing, self.running = True, True # Store the state of the menu class
+        self.game = MainGame(width, height) # Store the game
+        self.screen = pygame.display.set_mode((width, height)) # Display the screen
+        self.font = 'freesansbold.ttf' # Initalise the font
+
+         
+
+    #Run the menu
+    def menu_loop(self):
+        while self.running:
+            self.screen.fill(BLACK) # Fill the background
+
+            #Check for events
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT: # Quit Event
+                    self.playing, self.running = False, False  
+
+            #Check for button events
+            if self.button_pressed(self.button('Play', 30, 30, 40, 40, RED)): # If the play button is pressed
+                self.playing = False
+
+            #Update display            
+            pygame.display.update()
+            self.check_state()
+
+    #Check if menu should be active
+    def check_state(self):
+        if self.running: # If the menu is running
+            if not(self.playing): # If the menu is not being played
+                self.game.run() # Run the game
+
+                #If the game is not running
+                if self.game.running == False:
+                    self.running = False
+
+    
+    #Draw Button
+    def button(self, text, x, y, width, height, color):
+        btnRect = pygame.Rect(x, y, width, height)
+        pygame.draw.rect(self.screen, color, btnRect)
+        self.draw_text(text, self.font, 16, self.screen, BLACK, x + width/2, y + height/2)
+        return btnRect
+
+    #Check if button is pressed
+    def button_pressed(self, button):
+        return pygame.mouse.get_pressed()[0] and button.collidepoint(pygame.mouse.get_pos())        
+
+
+    #Draw Text
+    def draw_text(self, text, font, size, screen, color, x, y):
+        text_font = pygame.font.Font(font, size) # Initalise the font
+        text_surface = text_font.render(text, True, color) # Render the text on the surface
+        text_rect = text_surface.get_rect() # Get the rectangle object of the text
+        text_rect.center = (x, y) # Center the text to the position
+        screen.blit(text_surface, text_rect)
+
+        
+
+
+
+
+
+#Run the game
+M = Menu(WIDTH, HEIGHT)
+M.menu_loop()
