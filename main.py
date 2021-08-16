@@ -1,6 +1,8 @@
 #Libraries
+from os import system
 import pygame
 import random
+import time
 import networkx as nx
 
 #Images
@@ -16,6 +18,8 @@ HEIGHT = 800
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 RED = (255, 0, 0)
+GREEN = (0, 255, 0)
+DARK_GREEN = (135, 200, 0)
 BOARDX = 350
 BOARDY = 120
 
@@ -202,11 +206,12 @@ def next_path(graph, startNode, endNode):
 
 
 #--- Main Game ---
-class MainGame():
+class Level():
 
     #Initalise the game
-    def __init__(self, width, height):
+    def __init__(self, width, height, level):
         self.font = 'freesansbold.ttf' # Initalise the font
+        self.level = level  # Initalise the level
 
         #Settings
         self.settings = {} # Initalise the setting values
@@ -227,8 +232,8 @@ class MainGame():
         #Pygame Settings
         self.screen = pygame.display.set_mode((width, height)) # Display the screen
         self.clock = pygame.time.Clock() # Get the clock
-        self.gameLoop = True
-        self.running = True
+        self.playing, self.running = True, True
+
 
     #Draw Text
     def draw_text(self, text, font, size, screen, color, x, y):
@@ -240,45 +245,20 @@ class MainGame():
 
     #Initalise the game board
     def init_gameBoard(self):
+        xOffset = 48
+        yOffset = 64
         self.hexagons = nx.Graph() # Initalise the hexagon graph
-        A1 = Hexagon(self.screen, x=BOARDX, y=BOARDY)
-        A2 = Hexagon(self.screen, x=BOARDX + 48, y=BOARDY + (64 * 0.5))
-        A3 = Hexagon(self.screen, x=BOARDX + (48 * 2), y=BOARDY, states=['hole'])
-        A4 = Hexagon(self.screen, x=BOARDX + (48 * 3), y=BOARDY + (64 * 0.5))
-        A5 = Hexagon(self.screen, x=BOARDX + (48 * 4), y=BOARDY)
-        B1 = Hexagon(self.screen, x=BOARDX, y=BOARDY + 64)
-        B2 = Hexagon(self.screen, x=BOARDX + 48, y=BOARDY + (64 * 1.5))
-        B3 = Hexagon(self.screen, x=BOARDX + (48 * 2), y=BOARDY + 64)
-        B4 = Hexagon(self.screen, x=BOARDX + (48 * 3), y=BOARDY + (64 * 1.5))
-        B5 = Hexagon(self.screen, x=BOARDX + (48 * 4), y=BOARDY + 64)
-        C1 = Hexagon(self.screen, x=BOARDX, y=BOARDY + (64 * 2))
-        C2 = Hexagon(self.screen, x=BOARDX + 48, y = BOARDY + (64 * 2.5), states=['burrow'])
-        C3 = Hexagon(self.screen, x=BOARDX + (48 * 2), y=BOARDY + (64 * 2))
-        C4 = Hexagon(self.screen, x=BOARDX + (48 * 3), y = BOARDY + (64 * 2.5))
-        C5 = Hexagon(self.screen, x=BOARDX + (48 * 4), y=BOARDY + (64 * 2), states=['mouse'])
-        D1 = Hexagon(self.screen, x=BOARDX, y=BOARDY + (64 * 3))
-        D2 = Hexagon(self.screen, x=BOARDX + 48, y=BOARDY + (64 * 3.5))
-        D3 = Hexagon(self.screen, x=BOARDX + (48 * 2), y=BOARDY + (64 * 3))
-        D4 = Hexagon(self.screen, x=BOARDX + (48 * 3), y=BOARDY + (64 * 3.5))
-        D5 = Hexagon(self.screen, x=BOARDX + (48 * 4), y=BOARDY + (64 * 3))
 
-
-        self.hexagons.add_edges_from([
-                                (A1, A2), (A2, A3), (A3, A4), (A4, A5),
-                                (B1, B2), (B2, B3), (B3, B4), (B4, B5),
-                                (B1, A1), (B1, A2), (B2, A2), (B2, B3), 
-                                (B3, A2), (B3, A3), (B3, A4),
-                                (B4, A4), (B5, A4), (B5, A5),
-                                
-                                (C1, C2), (C2, C3), (C3, C4), (C4, C5),
-                                (C1, B1), (C1, B2), (C2, B2), (C3, B3),
-                                (C3, B4), (C4, B4), (C5, B4), (C5, B5),
-
-                                (D1, D2), (D2, D3), (D3, D4), (D4, D5),
-                                (D1, C1), (D1, C2), (D2, C2), (D3, C3),
-                                (D3, C4), (D4, C4), (D5, C4), (D5, C5)
-                                ]) 
-        self.gameBoard = Board(self.hexagons) # Initalse the game board
+        #Check which level it is
+        if self.level == 1:
+            
+            #Set up the board
+            A1 = Hexagon(self.screen, x=BOARDX, y=BOARDY, states=['mouse'])
+            A2 = Hexagon(self.screen, x=BOARDX + xOffset, y = BOARDY + (yOffset * 0.5))
+            B1 = Hexagon(self.screen, x=BOARDX, y=BOARDY + yOffset)
+            B2 = Hexagon(self.screen, x=BOARDX + xOffset, y = BOARDY + (yOffset * 1.5), states=['hole'])
+            self.hexagons.add_edges_from([(A1, B1), (A1, B1), (B1, B2), (B2, A2)])
+            self.gameBoard = Board(self.hexagons) # Initalse the game board
 
     
     #Run the game
@@ -288,80 +268,85 @@ class MainGame():
 
     #Game Loop
     def game_loop(self):
-        while self.gameLoop: # While the game constantly being looped        
-            self.screen.fill(BLACK) # Fill the background
+        while self.playing: # While the game constantly being looped     
+            if self.running:   
+                self.screen.fill(BLACK) # Fill the background
 
-            #Check for events
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT: # Quit Event
-                    self.gameLoop = False
-                    self.running = False
-                    break                   
+                #Check for events
+                for event in pygame.event.get():
+                    if event.type == pygame.QUIT: # Quit Event
+                        self.running = False                 
 
-            #Update the game board
-            state = self.gameBoard.update()
-            if state == 'W':
-                self.draw_text('Win', self.font, 64, self.screen, WHITE, 200, 200)
-                print('Win')
-                self.gameLoop = False
+                #Update the game board
+                state = self.gameBoard.update()
+                if state == 'W':
+                    self.draw_text('Win', self.font, 64, self.screen, WHITE, 200, 200)
+                    print('Win')
+                    self.playing = False
 
-            elif state == 'L':
-                self.draw_text('Lose', self.font, 64, self.screen, WHITE, 200, 200)
-                print('Lose')
-                self.gameLoop = False
+                elif state == 'L':
+                    self.draw_text('Lose', self.font, 64, self.screen, WHITE, 200, 200)
+                    print('Lose')
+                    self.playing = False
 
-            #Update the display
-            pygame.display.update()
-
-
-
-
-
-
+                #Update the display
+                pygame.display.update() 
+            else:    
+                break 
 
 
 # --- Menu ---
-class Menu():
+class MainMenu():
 
     #Intialise the menu class
-    def __init__(self, width, height):
+    def __init__(self, width, height, events):
         pygame.init() # Initialise the pygame module
         self.playing, self.running = True, True # Store the state of the menu class
-        self.game = MainGame(width, height) # Store the game
+        self.events = events
         self.screen = pygame.display.set_mode((width, height)) # Display the screen
-        self.font = 'freesansbold.ttf' # Initalise the font
-
-         
+        self.font = 'freesansbold.ttf' # Initalise the font         
 
     #Run the menu
-    def menu_loop(self):
-        while self.running:
-            self.screen.fill(BLACK) # Fill the background
+    def run(self):
+        while self.playing:
+            if self.running:                           
+                self.screen.fill(DARK_GREEN) # Draw the background            
+                self.check_events(self.events) # Check if any events have occured                    
+                self.update() # Update the display of the menu
+            else:
+                break
 
-            #Check for events
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT: # Quit Event
-                    self.playing, self.running = False, False  
+    #Check Events
+    def check_events(self, buttonEvents):
 
-            #Check for button events
-            if self.button_pressed(self.button('Play', 30, 30, 40, 40, RED)): # If the play button is pressed
+        #Check for events
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT: # Quit Event
                 self.playing = False
+                pygame.quit() 
+                
 
-            #Update display            
-            pygame.display.update()
-            self.check_state()
+        #Check for button events
+        x = 300
+        y = 300 
+        for button in buttonEvents: # Iterate through all buttons
+            if self.button_pressed(self.button(button[0], x, y, 210, 50, RED)): # If the play button is pressed
+                time.sleep(0.1) # Delay for button press effect
+                button[1].run() # Run the event
 
-    #Check if menu should be active
-    def check_state(self):
-        if self.running: # If the menu is running
-            if not(self.playing): # If the menu is not being played
-                self.game.run() # Run the game
-
-                #If the game is not running
-                if self.game.running == False:
+                #Check if the game has been quit
+                if button[1].running == False:
                     self.running = False
+                    break
 
-    
+            #Move the position of the next button
+            y += 100 
+
+
+    #Update the screen
+    def update(self):
+        pygame.display.update()
+
     #Draw Button
     def button(self, text, x, y, width, height, color):
         btnRect = pygame.Rect(x, y, width, height)
@@ -371,8 +356,7 @@ class Menu():
 
     #Check if button is pressed
     def button_pressed(self, button):
-        return pygame.mouse.get_pressed()[0] and button.collidepoint(pygame.mouse.get_pos())        
-
+            return pygame.mouse.get_pressed()[0] and button.collidepoint(pygame.mouse.get_pos()) # Check if mouse condition matches                
 
     #Draw Text
     def draw_text(self, text, font, size, screen, color, x, y):
@@ -382,12 +366,19 @@ class Menu():
         text_rect.center = (x, y) # Center the text to the position
         screen.blit(text_surface, text_rect)
 
-        
-
-
 
 
 
 #Run the game
-M = Menu(WIDTH, HEIGHT)
-M.menu_loop()
+M = MainMenu(WIDTH, HEIGHT, [
+                                        ('Play', MainMenu(WIDTH, HEIGHT, [ 
+                                                                                ('Levels', MainMenu(WIDTH, HEIGHT, [
+                                                                                                                            ('Level 1', Level(WIDTH, HEIGHT, 1))
+                                                                                                                    ])),
+                                                                                ('Endless', Level(WIDTH, HEIGHT, 1))
+                                                                         ])),
+
+                                        ('Skins', Level(WIDTH, HEIGHT, 1)),
+                                        ('Settings', Level(WIDTH, HEIGHT, 1))
+                            ])
+M.run()
