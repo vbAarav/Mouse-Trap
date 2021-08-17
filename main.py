@@ -11,6 +11,7 @@ wallImg = pygame.image.load('assets/wall.png')
 holeImg = pygame.image.load('assets/hole.png')
 burrowImg = pygame.image.load('assets/burrow.png')
 mouseImg = pygame.image.load('assets/mouse.png')
+logoImg = pygame.image.load('assets/logo.png')
 
 #Constants
 WIDTH = 800
@@ -310,7 +311,8 @@ class MainMenu():
     def run(self):
         while self.playing:
             if self.running:                           
-                self.screen.fill(DARK_GREEN) # Draw the background            
+                self.screen.fill(DARK_GREEN) # Draw the background    
+                self.screen.blit(logoImg, (0, 0)) # Add the logo        
                 self.check_events(self.events) # Check if any events have occured                    
                 self.update() # Update the display of the menu
             else:
@@ -328,10 +330,10 @@ class MainMenu():
 
         #Check for button events
         x = 300
-        y = 300 
+        y = 350 
         for button in buttonEvents: # Iterate through all buttons
             if self.button_pressed(self.button(button[0], x, y, 210, 50, RED)): # If the play button is pressed
-                time.sleep(0.1) # Delay for button press effect
+                time.sleep(0.4) # Delay for button press effect
                 button[1].run() # Run the event
 
                 #Check if the game has been quit
@@ -344,7 +346,7 @@ class MainMenu():
 
 
     #Update the screen
-    def update(self):
+    def update(self):        
         pygame.display.update()
 
     #Draw Button
