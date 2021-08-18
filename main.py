@@ -12,6 +12,7 @@ holeImg = pygame.image.load('assets/hole.png')
 burrowImg = pygame.image.load('assets/burrow.png')
 mouseImg = pygame.image.load('assets/mouse.png')
 logoImg = pygame.image.load('assets/logo.png')
+ventImg = pygame.image.load('assets/vent.png')
 
 #Constants
 WIDTH = 800
@@ -25,7 +26,7 @@ BOARDX = 350
 BOARDY = 120
 
 
-#--- Hexagon ---
+#------------- Hexagon -------------
 class Hexagon(pygame.sprite.Sprite):
 
     #Initalise hexagon object
@@ -158,7 +159,7 @@ class Board():
 
 
 
-#--- Shortest Path Algorithim ---
+#------- Shortest Path Algorithim ------
 def next_path(graph, startNode, endNode):
     #Check if the algorithim requirements are met
     if startNode not in graph.nodes or endNode not in graph.nodes:
@@ -296,7 +297,7 @@ class Level():
                 break 
 
 
-# --- Menu ---
+# ---- Menu ----
 class MainMenu():
 
     #Intialise the menu class
@@ -305,7 +306,8 @@ class MainMenu():
         self.playing, self.running = True, True # Store the state of the menu class
         self.events = events
         self.screen = pygame.display.set_mode((width, height)) # Display the screen
-        self.font = 'freesansbold.ttf' # Initalise the font         
+        self.font = 'freesansbold.ttf' # Initalise the font 
+               
 
     #Run the menu
     def run(self):
@@ -329,24 +331,31 @@ class MainMenu():
                 
 
         #Check for button events
-        x = 300
-        y = 350 
-        for button in buttonEvents: # Iterate through all buttons
-            if self.button_pressed(self.button(button[0], x, y, 210, 50, RED)): # If the play button is pressed
-                time.sleep(0.4) # Delay for button press effect
-                button[1].run() # Run the event
+        if self.button_pressed(ventImg.get_rect()):
+            time.sleep(0.3)
+            self.playing = False
 
-                #Check if the game has been quit
-                if button[1].running == False:
-                    self.running = False
-                    break
+        else:
+            x = 300
+            y = 350 
+            for button in buttonEvents: # Iterate through all buttons
+                if self.button_pressed(self.button(button[0], x, y, 210, 50, RED)): # If the play button is pressed
+                    time.sleep(0.4) # Delay for button press effect
+                    button[1].self_playing = True
+                    button[1].run() # Run the event
 
-            #Move the position of the next button
-            y += 100 
+                    #Check if the game has been quit
+                    if button[1].running == False:
+                        self.running = False
+                        break
+
+                #Move the position of the next button
+                y += 100 
 
 
     #Update the screen
-    def update(self):        
+    def update(self):
+        self.screen.blit(ventImg, (0, 0))        
         pygame.display.update()
 
     #Draw Button
