@@ -2,6 +2,7 @@
 from os import system
 import pygame
 import random
+import string
 import time
 import networkx as nx
 
@@ -22,7 +23,7 @@ WHITE = (255, 255, 255)
 RED = (255, 0, 0)
 GREEN = (0, 255, 0)
 DARK_GREEN = (135, 200, 0)
-BOARDX = 350
+BOARDX = 150
 BOARDY = 120
 
 
@@ -254,13 +255,45 @@ class Level():
         #Check which level it is
         if self.level == 1:
             
-            #Set up the board
-            A1 = Hexagon(self.screen, x=BOARDX, y=BOARDY, states=['mouse'])
-            A2 = Hexagon(self.screen, x=BOARDX + xOffset, y = BOARDY + (yOffset * 0.5))
-            B1 = Hexagon(self.screen, x=BOARDX, y=BOARDY + yOffset)
-            B2 = Hexagon(self.screen, x=BOARDX + xOffset, y = BOARDY + (yOffset * 1.5), states=['hole'])
-            self.hexagons.add_edges_from([(A1, B1), (A1, B1), (B1, B2), (B2, A2)])
-            self.gameBoard = Board(self.hexagons) # Initalse the game board
+            #Set up board variables
+            lstHex = {}
+            x = BOARDX
+            y = BOARDY
+
+            #Create the board
+            for i in range(0, 9):
+                for j in range(1, 13):
+                    lstHex[f'{i+1}{j}']  = Hexagon(self.screen, x=x, y=y)
+                    
+                    #Change the position of the next hexagon
+                    x += xOffset
+                    if j % 2 == 0:
+                        y -= (yOffset * 0.5)
+                    else:
+                        y += (yOffset * 0.5)   
+
+                x = BOARDX             
+                y += yOffset
+
+            #Create the edges
+            lstHex['51'].mouse = True
+            lstHex['11'].hole = True
+            #self.hexagons.add_nodes_from(lstHex.values())
+            for key in lstHex:
+                try:
+                    if len(key) == 2 and key[1] == '1':
+                        self.hexagons.add_edges_from([(lstHex[key], lstHex[f'{key[0]}{int(key[1]) + 1}']), (lstHex[key], lstHex[f'{int(key[0]) + 1}{key[1]}'])])
+                except:
+                    pass  
+
+            self.gameBoard = Board(self.hexagons) # Initalise the gameboard             
+            #A1 = Hexagon(self.screen, x=BOARDX, y=BOARDY, states=['mouse'])
+            #A2 = Hexagon(self.screen, x=BOARDX + xOffset, y = BOARDY + (yOffset * 0.5))
+            #B1 = Hexagon(self.screen, x=BOARDX, y=BOARDY + yOffset)
+            #B2 = Hexagon(self.screen, x=BOARDX + xOffset, y = BOARDY + (yOffset * 1.5), states=['hole'])
+
+            #self.hexagons.add_edges_from([(A1, B1), (A1, A2), (B1, B2), (B2, A2)])
+            
 
     
     #Run the game
@@ -341,7 +374,7 @@ class MainMenu():
             for button in buttonEvents: # Iterate through all buttons
                 if self.button_pressed(self.button(button[0], x, y, 210, 50, RED)): # If the play button is pressed
                     time.sleep(0.4) # Delay for button press effect
-                    button[1].self_playing = True
+                    button[1].playing = True
                     button[1].run() # Run the event
 
                     #Check if the game has been quit
