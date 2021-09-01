@@ -23,8 +23,8 @@ WHITE = (255, 255, 255)
 RED = (255, 0, 0)
 GREEN = (0, 255, 0)
 DARK_GREEN = (135, 200, 0)
-BOARDX = 150
-BOARDY = 120
+BOARDX = 160
+BOARDY = 100
 
 
 #------------- Hexagon -------------
@@ -139,7 +139,7 @@ class Board():
         if self.turn == 'M':
 
             #Find next path
-            nextHex = random.choice(list(self.graph.adj[self.mouse]))
+            #nextHex = random.choice(list(self.graph.adj[self.mouse]))
             nextHex = next_path(self.graph.subgraph([node for node in self.graph.nodes if not(node.wall)]), self.mouse, self.hole)
             if nextHex == 'W' or nextHex == 'L':
                 return nextHex
@@ -262,7 +262,7 @@ class Level():
 
             #Create the board
             for i in range(0, 9):
-                for j in range(1, 13):
+                for j in range(1, 11):
                     lstHex[f'{i+1}{j}']  = Hexagon(self.screen, x=x, y=y)
                     
                     #Change the position of the next hexagon
@@ -275,25 +275,37 @@ class Level():
                 x = BOARDX             
                 y += yOffset
 
-            #Create the edges
-            lstHex['51'].mouse = True
-            lstHex['11'].hole = True
-            #self.hexagons.add_nodes_from(lstHex.values())
+            #Create the inital positions
+            lstHex['55'].mouse = True
+            holeHex = Hexagon(self.screen, x=-500, y=-500, states=['hole'])
+            
+            #Add the edges
             for key in lstHex:
-                try:
-                    if len(key) == 2 and key[1] == '1':
-                        self.hexagons.add_edges_from([(lstHex[key], lstHex[f'{key[0]}{int(key[1]) + 1}']), (lstHex[key], lstHex[f'{int(key[0]) + 1}{key[1]}'])])
-                except:
-                    pass  
+                if len(key) == 2:
+                    try:                    
+                        self.hexagons.add_edge(lstHex[key], lstHex[f'{key[0]}{int(key[1]) + 1}'])
+                    except:
+                        pass
+
+                    try:                    
+                        self.hexagons.add_edge(lstHex[key], lstHex[f'{int(key[0]) + 1}{key[1]}'])
+                    except:
+                        pass
+
+                    try:                    
+                        self.hexagons.add_edge(lstHex[key], lstHex[f'{int(key[0]) - 1}{key[1]}'])
+                    except:
+                        pass  
+            
+            #Connect outer hexagons to hole
+            for key in lstHex:
+                if key[0] == '1' or key[1] == '1':
+                    self.hexagons.add_edge(lstHex[key], holeHex)
+
+
 
             self.gameBoard = Board(self.hexagons) # Initalise the gameboard             
-            #A1 = Hexagon(self.screen, x=BOARDX, y=BOARDY, states=['mouse'])
-            #A2 = Hexagon(self.screen, x=BOARDX + xOffset, y = BOARDY + (yOffset * 0.5))
-            #B1 = Hexagon(self.screen, x=BOARDX, y=BOARDY + yOffset)
-            #B2 = Hexagon(self.screen, x=BOARDX + xOffset, y = BOARDY + (yOffset * 1.5), states=['hole'])
-
-            #self.hexagons.add_edges_from([(A1, B1), (A1, A2), (B1, B2), (B2, A2)])
-            
+ 
 
     
     #Run the game
@@ -315,12 +327,10 @@ class Level():
                 #Update the game board
                 state = self.gameBoard.update()
                 if state == 'W':
-                    self.draw_text('Win', self.font, 64, self.screen, WHITE, 200, 200)
                     print('Win')
                     self.playing = False
 
                 elif state == 'L':
-                    self.draw_text('Lose', self.font, 64, self.screen, WHITE, 200, 200)
                     print('Lose')
                     self.playing = False
 
@@ -400,6 +410,7 @@ class MainMenu():
 
     #Check if button is pressed
     def button_pressed(self, button):
+        if self.playing:
             return pygame.mouse.get_pressed()[0] and button.collidepoint(pygame.mouse.get_pos()) # Check if mouse condition matches                
 
     #Draw Text
