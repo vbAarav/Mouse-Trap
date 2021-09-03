@@ -253,7 +253,7 @@ class Level():
         self.hexagons = nx.Graph() # Initalise the hexagon graph
 
         #Check which level it is
-        if self.level == 1:
+        if self.level == 0:
             
             #Set up board variables
             lstHex = {}
@@ -301,10 +301,23 @@ class Level():
             for key in lstHex:
                 if key[0] == '1' or key[1] == '1':
                     self.hexagons.add_edge(lstHex[key], holeHex)
+        
+        #Level 1
+        elif self.level == 1:
+
+            A1 = Hexagon(self.screen, x=BOARDX, y=BOARDY, states=['mouse'])
+            A2 = Hexagon(self.screen, x=BOARDX + xOffset, y=BOARDY + (yOffset * .5))
+            A3 = Hexagon(self.screen, x=BOARDX + (xOffset * 2), y=BOARDY)
+            A4 = Hexagon(self.screen, x=BOARDX + (xOffset * 3), y=BOARDY + (yOffset * .5))
+            A5 = Hexagon(self.screen, x=BOARDX + (xOffset * 4), y=BOARDY, states=['hole'])
+
+            self.hexagons.add_edges_from([
+                                             (A1, A2), (A2, A3), (A3, A4), (A4, A5)
+                                         ])
+            
 
 
-
-            self.gameBoard = Board(self.hexagons) # Initalise the gameboard             
+        self.gameBoard = Board(self.hexagons) # Initalise the gameboard             
  
 
     
@@ -430,7 +443,7 @@ M = MainMenu(WIDTH, HEIGHT, [
                                                                                 ('Levels', MainMenu(WIDTH, HEIGHT, [
                                                                                                                             ('Level 1', Level(WIDTH, HEIGHT, 1))
                                                                                                                     ])),
-                                                                                ('Endless', Level(WIDTH, HEIGHT, 1))
+                                                                                ('Endless', Level(WIDTH, HEIGHT, 0))
                                                                          ])),
 
                                         ('Skins', Level(WIDTH, HEIGHT, 1)),
