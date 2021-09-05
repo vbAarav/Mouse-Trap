@@ -15,6 +15,7 @@ mouseImg = pygame.image.load('assets/mouse.png')
 logoImg = pygame.image.load('assets/logo.png')
 ventImg = pygame.image.load('assets/vent.png')
 
+
 #Constants
 WIDTH = 800
 HEIGHT = 800
@@ -208,7 +209,7 @@ def next_path(graph, startNode, endNode):
 
 
 
-#--- Main Game ---
+#--- Game/Level ---
 class Level():
 
     #Initalise the game
@@ -363,6 +364,12 @@ class MainMenu():
         self.events = events
         self.screen = pygame.display.set_mode((width, height)) # Display the screen
         self.font = 'freesansbold.ttf' # Initalise the font 
+
+        #Sounds
+        self.buttonPressSound = pygame.mixer.Sound('assets/button_press.wav') # Button Press Sound
+        pygame.mixer.music.load('assets/mainmenu.wav') # Main Menu Music
+        
+        pygame.mixer.music.play(-1)
                
 
     #Run the menu
@@ -389,6 +396,7 @@ class MainMenu():
         #Check for button events
         if self.button_pressed(ventImg.get_rect()):
             time.sleep(0.3)
+            self.buttonPressSound.play()
             self.playing = False
 
         else:
@@ -397,6 +405,7 @@ class MainMenu():
             for button in buttonEvents: # Iterate through all buttons
                 if self.button_pressed(self.button(button[0], x, y, 210, 50, RED)): # If the play button is pressed
                     time.sleep(0.4) # Delay for button press effect
+                    self.buttonPressSound.play()
                     button[1].playing = True
                     button[1].run() # Run the event
 
