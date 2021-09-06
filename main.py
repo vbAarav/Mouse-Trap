@@ -6,6 +6,7 @@ import string
 import time
 import networkx as nx
 
+
 #Images
 hexagonImg = pygame.image.load('assets/hexagon.png')
 wallImg = pygame.image.load('assets/wall.png')
@@ -14,6 +15,18 @@ burrowImg = pygame.image.load('assets/burrow.png')
 mouseImg = pygame.image.load('assets/mouse.png')
 logoImg = pygame.image.load('assets/logo.png')
 ventImg = pygame.image.load('assets/vent.png')
+
+#Settings
+settings = {} # Initalise the setting values
+fsettings = open('settings.txt', 'r') # Open the setting values
+
+#Intialise settings
+for line in fsettings.readlines(): # Read the lines of settings.txt
+    name, val = line.split('=') # Split the text into seperate values
+    settings[name] = val.replace('\n', '') # Set the value equal to the settings
+
+#Close files
+fsettings.close()
 
 
 #Constants
@@ -41,6 +54,9 @@ class Hexagon(pygame.sprite.Sprite):
         self.rect = self.image.get_rect() # Set the hitbox of the object
         self.rect.move_ip(x, y) # Update the hitbox
         self.screen = screen # Get the screen
+
+        #Sounds
+        self.wallPlaceSound = pygame.mixer.Sound('assets/wall_place.wav') # Place a wall
 
         #States
         if 'mouse' in states: # Mouse State Check
@@ -86,6 +102,7 @@ class Hexagon(pygame.sprite.Sprite):
         #Check if the object has been clicked
         if self.is_clicked() and turn == 'P':
             if not(self.mouse) and not(self.hole) and not(self.wall) and not(self.burrow): # If the conditions for a wall to be placed are met
+                self.wallPlaceSound.play()
                 self.wall = True # Change the object to a wall 
                 turn = 'M' # Change the turn to the mouse
 
@@ -107,6 +124,7 @@ class Hexagon(pygame.sprite.Sprite):
 
         #Check if there is a mouse on the hexagon
         if self.mouse:
+            global mouseImg
             self.screen.blit(mouseImg, (self.x+16, self.y+16))        
 
         #Return the next turn
@@ -215,28 +233,12 @@ class Level():
     #Initalise the game
     def __init__(self, width, height, level):
         self.font = 'freesansbold.ttf' # Initalise the font
-        self.level = level  # Initalise the level
-
-        #Settings
-        self.settings = {} # Initalise the setting values
-        self.fsettings = open('settings.txt', 'r') # Open the setting values
-
-        #Intialise settings
-        for line in self.fsettings.readlines(): # Read the lines of settings.txt
-            name, val = line.split('=') # Split the text into seperate values
-            self.settings[name] = val # Set the value equal to the settings
-
-        #Load the skin
-        global mouseImg
-        mouseImg = pygame.image.load('assets/' + self.settings['skin'])        
-
-        #Close files
-        self.fsettings.close()
+        self.level = level  # Initalise the level               
 
         #Pygame Settings
         self.screen = pygame.display.set_mode((width, height)) # Display the screen
         self.clock = pygame.time.Clock() # Get the clock
-        self.playing, self.running = True, True
+        self.playing, self.running = True, True              
 
 
     #Draw Text
@@ -363,12 +365,12 @@ class MainMenu():
         self.playing, self.running = True, True # Store the state of the menu class
         self.events = events
         self.screen = pygame.display.set_mode((width, height)) # Display the screen
-        self.font = 'freesansbold.ttf' # Initalise the font 
+        self.font = 'freesansbold.ttf' # Initalise the font        
 
         #Sounds
         self.buttonPressSound = pygame.mixer.Sound('assets/button_press.wav') # Button Press Sound
+
         pygame.mixer.music.load('assets/mainmenu.wav') # Main Menu Music
-        
         pygame.mixer.music.play(-1)
                
 
@@ -444,6 +446,76 @@ class MainMenu():
         screen.blit(text_surface, text_rect)
 
 
+# ---- Skin Menu ----
+class SkinMenu(MainMenu):
+
+    #Intialise the menu class
+    def __init__(self, width, height):
+        pygame.init() # Initialise the pygame module
+        self.playing, self.running = True, True # Store the state of the menu class
+        self.screen = pygame.display.set_mode((width, height)) # Display the screen
+        self.font = 'freesansbold.ttf' # Initalise the font     
+
+        #Sounds
+        self.buttonPressSound = pygame.mixer.Sound('assets/button_press.wav') # Button Press Sound
+        pygame.mixer.music.load('assets/mainmenu.wav') # Main Menu Music
+        pygame.mixer.music.play(-1)
+
+        #Skins
+        skins = ['A', 'B', 'C', 'D']
+        fskins = ['F', 'G']
+        self.skins = [s for s in skins if s not in fskins] # Get the skins
+        self.fskins = fskins # Get the rate up skins
+
+    #Run the menu
+    def run(self):
+        while self.playing:
+            if self.running:                           
+                self.screen.fill(DARK_GREEN) # Draw the background 
+                self.check_events() # Check events              
+                self.update() # Update the display of the menu
+            else:
+                break
+            
+    
+    #Update the screen
+    def update(self):
+        self.screen.blit(ventImg, (0, 0))        
+        pygame.display.update()
+
+    #Check for events
+    def check_events(self):        
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT: # Quit Event
+                self.playing = False
+                self.running = False
+                pygame.quit() 
+                
+
+        #Check for button events
+        if self.button_pressed(ventImg.get_rect()):
+            time.sleep(0.3)
+            self.buttonPressSound.play()
+            self.playing = False
+
+        aSkins = [pygame.image.load(f'assets/{skin}') for skin in settings['availableSkins'].split(',')]  # Retrieve available skins
+        scaledSkins = [pygame.transform.scale(skin, (128, 128)) for skin in aSkins] # Scale the skins
+
+        #Place the skins in the correct position
+        x = 100
+        y = 100
+        for i in range(len(scaledSkins)): # Iterate through all the skins
+            if self.button_pressed(self.screen.blit(scaledSkins[i], (x, y))):
+                #Effects
+                time.sleep(0.3)
+                self.buttonPressSound.play()
+
+                #Change the skin
+                global mouseImg
+                mouseImg = aSkins[i]
+            y += 128
+    
+      
 
 
 #Run the game
@@ -455,7 +527,7 @@ M = MainMenu(WIDTH, HEIGHT, [
                                                                                 ('Endless', Level(WIDTH, HEIGHT, 0))
                                                                          ])),
 
-                                        ('Skins', Level(WIDTH, HEIGHT, 1)),
+                                        ('Skins', SkinMenu(WIDTH, HEIGHT)),
                                         ('Settings', Level(WIDTH, HEIGHT, 1))
                             ])
 M.run()
