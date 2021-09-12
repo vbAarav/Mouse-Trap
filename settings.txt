@@ -1,2 +1,2 @@
-activeSkin=
+activeSkin=pirate.png
 availableSkins=pirate.png,moni.png,highschool_herobrine.png

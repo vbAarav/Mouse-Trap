@@ -1,20 +1,11 @@
 #Libraries
-from os import system
+from os import dup2, system
 import pygame
 import random
 import string
+import math
 import time
 import networkx as nx
-
-
-#Images
-hexagonImg = pygame.image.load('assets/hexagon.png')
-wallImg = pygame.image.load('assets/wall.png')
-holeImg = pygame.image.load('assets/hole.png')
-burrowImg = pygame.image.load('assets/burrow.png')
-mouseImg = pygame.image.load('assets/mouse.png')
-logoImg = pygame.image.load('assets/logo.png')
-ventImg = pygame.image.load('assets/vent.png')
 
 #Settings
 settings = {} # Initalise the setting values
@@ -25,8 +16,18 @@ for line in fsettings.readlines(): # Read the lines of settings.txt
     name, val = line.split('=') # Split the text into seperate values
     settings[name] = val.replace('\n', '') # Set the value equal to the settings
 
+
 #Close files
 fsettings.close()
+
+#Images
+hexagonImg = pygame.image.load('assets/hexagon.png')
+wallImg = pygame.image.load('assets/wall.png')
+holeImg = pygame.image.load('assets/hole.png')
+burrowImg = pygame.image.load('assets/burrow.png')
+mouseImg = pygame.image.load('assets/' + settings['activeSkin'])
+logoImg = pygame.image.load('assets/logo.png')
+ventImg = pygame.image.load('assets/vent.png')
 
 
 #Constants
@@ -148,9 +149,10 @@ class Board():
                     self.mouse = hex
 
         #Find the hole
+        self.hole = []
         for hex in self.graph.nodes: # Iterate through every hexagon
                 if hex.hole == True: # If the hexagon has the mouse
-                    self.hole = hex
+                    self.hole.append(hex)
 
     #Update the board
     def update(self):
@@ -165,7 +167,7 @@ class Board():
             else:
                 self.mouse.mouse = False # Remove mouse from previous hexagon
                 self.mouse = nextHex # Change the next hexagon to the mouse
-                nextHex.mouse = True # Set next hexagon to have the mouse state
+                self.mouse.mouse = True # Set next hexagon to have the mouse state
 
             self.turn = 'P'
 
@@ -180,48 +182,41 @@ class Board():
 
 
 #------- Shortest Path Algorithim ------
-def next_path(graph, startNode, endNode):
-    #Check if the algorithim requirements are met
-    if startNode not in graph.nodes or endNode not in graph.nodes:
-        return startNode    
+def next_path(graph, startNode, endNodes):
+
+    #Variables
+    shortestLength = math.inf
+    endNode = None
+
+    #Iterate through all end nodes
+    for node in endNodes: 
+        if nx.has_path(graph, startNode, node): # Check if a path exists
+            if nx.shortest_path_length(graph, startNode, node) < shortestLength: # Check if the shortest length is lower then the other end nodes shortest length
+                endNode = node
+                shortestLength = nx.shortest_path_length(graph, startNode, node)
     
-    #Initalise algorithim variables
-    visited = []
-    unvisited = []
-    unvisited.extend(graph.nodes)
-    path = []
-    currentNode = startNode
-    nextNode = startNode
-
-    #Algorthim Loop
-    while endNode not in path:
-        #Choose the next node to add to the path
-        if set(graph.adj[currentNode].keys()) <= set(visited): # If all the neighbours have been visited
-            try: # Find the next node
-                nextNode = path[-1]
-                path.pop(-1)
-            except: # If there is no path
-                break        
-        else: 
-            while nextNode in visited: # While the node being chosen has been visited
-                nextNode = random.choice(list(graph.adj[currentNode])) # Choose a neigbhbouring node
-            path.append(nextNode) # Add the node to the path
-            unvisited.remove(nextNode) # Remove from the unvisited list
-            visited.append(nextNode) # Add to the visited list
-        currentNode = nextNode # Move to the next node
-
-    #Check for win condition or return next path
-    try:
-        if startNode in path: # Check if the start node was included in the path
-            if path[1].hole:
-                return 'L'
-            return path[1] # Return next hexagon
+    #Choose which end node to follow
+    if endNode is None:
+        return 'W'
+    else:
+        
+        path = nx.shortest_path(graph, startNode, endNode) # Define shortest path
+        #Check if you lose if you move to the next node
+        if path[1].hole == True:
+            return 'L'
         else:
-            if path[0].hole:
-                return 'L'
-            return path[0] # Return next hexagon
-    except:
-        return 'W' # Return no hexagon
+            return path[1]
+           
+
+    
+
+    
+
+
+
+    
+
+
 
 
 
@@ -264,9 +259,9 @@ class Level():
             y = BOARDY
 
             #Create the board
-            for i in range(0, 9):
+            for i in range(1, 10):
                 for j in range(1, 11):
-                    lstHex[f'{i+1}{j}']  = Hexagon(self.screen, x=x, y=y)
+                    lstHex[f'{i}{j}']  = Hexagon(self.screen, x=x, y=y)
                     
                     #Change the position of the next hexagon
                     x += xOffset
@@ -302,23 +297,55 @@ class Level():
             
             #Connect outer hexagons to hole
             for key in lstHex:
-                if key[0] == '1' or key[1] == '1':
+                if key[0] == '1' or key[1] == '1' or key[0] == '9':
                     self.hexagons.add_edge(lstHex[key], holeHex)
-        
+             
         #Level 1
         elif self.level == 1:
+            
+            #Initial Board Position
+            x = BOARDX + (xOffset * 2)
+            y = BOARDY
 
-            A1 = Hexagon(self.screen, x=BOARDX, y=BOARDY, states=['mouse'])
-            A2 = Hexagon(self.screen, x=BOARDX + xOffset, y=BOARDY + (yOffset * .5))
-            A3 = Hexagon(self.screen, x=BOARDX + (xOffset * 2), y=BOARDY)
-            A4 = Hexagon(self.screen, x=BOARDX + (xOffset * 3), y=BOARDY + (yOffset * .5))
-            A5 = Hexagon(self.screen, x=BOARDX + (xOffset * 4), y=BOARDY, states=['hole'])
+            A3 = Hexagon(self.screen, x=x, y=y + (yOffset * 1), states=['mouse'])
+            B3 = Hexagon(self.screen, x=x, y=y + (yOffset * 2) , states=['burrow'])
+            C3 = Hexagon(self.screen, x=x, y=y + (yOffset * 3), states=['burrow'])
+            D3 = Hexagon(self.screen, x=x, y=y + (yOffset * 4))
+            E3 = Hexagon(self.screen, x=x, y=y + (yOffset * 5), states=['hole'])
+            C4 = Hexagon(self.screen, x=x + xOffset, y=y + (yOffset * 3.5))
+            C2 = Hexagon(self.screen, x=x - xOffset, y=y + (yOffset * 3.5))
+            C1 = Hexagon(self.screen, x=x - (xOffset * 2), y=y + (yOffset * 3), states=['hole'])
+            C5 = Hexagon(self.screen, x=x + (xOffset * 2), y=y + (yOffset * 3), states=['hole'])
 
             self.hexagons.add_edges_from([
-                                             (A1, A2), (A2, A3), (A3, A4), (A4, A5)
+                                             (A3, B3), (B3, C3),
+                                             (C3, C2), (C3, C4), (C3, D3),
+                                             (D3, C2), (D3, C4),
+                                             (D3, E3), (C2, C1), (C4, C5)
+                                         ])
+        
+        #Level 2
+        elif self.level == 2:
+            
+            #Initial Board Position
+            x = BOARDX
+            y = BOARDY
+
+            A1 = Hexagon(self.screen, x=x + (xOffset * 0), y=y + (yOffset * 0), states=['mouse'])
+            A2 = Hexagon(self.screen, x=x + (xOffset * 1), y=y + (yOffset * 0.5))
+            A3 = Hexagon(self.screen, x=x + (xOffset * 2), y=y + (yOffset * 0))
+            B1 = Hexagon(self.screen, x=x + (xOffset * 0), y=y + (yOffset * 1))
+            B2 = Hexagon(self.screen, x=x + (xOffset * 1), y=y + (yOffset * 1.5))
+            B3 = Hexagon(self.screen, x=x + (xOffset * 2), y=y + (yOffset * 1))
+            B4 = Hexagon(self.screen, x=x + (xOffset * 3), y=y + (yOffset * 1.5), states=['hole'])
+
+            self.hexagons.add_edges_from([
+                                             (A1, A2), (A1, B1), 
+                                             (A2, B1), (A2, B2), (A2, B3), (A2, A3),
+                                             (A3, B3),
+                                             (B1, B2), (B2, B3), (B3, B4) 
                                          ])
             
-
 
         self.gameBoard = Board(self.hexagons) # Initalise the gameboard             
  
@@ -354,6 +381,13 @@ class Level():
                 pygame.display.update() 
             else:    
                 break 
+
+
+
+
+
+
+
 
 
 # ---- Menu ----
@@ -446,6 +480,19 @@ class MainMenu():
         screen.blit(text_surface, text_rect)
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
 # ---- Skin Menu ----
 class SkinMenu(MainMenu):
 
@@ -511,6 +558,7 @@ class SkinMenu(MainMenu):
                 self.buttonPressSound.play()
 
                 #Change the skin
+                settings['activeSkin'] = aSkins[i]
                 global mouseImg
                 mouseImg = aSkins[i]
             y += 128
@@ -522,7 +570,8 @@ class SkinMenu(MainMenu):
 M = MainMenu(WIDTH, HEIGHT, [
                                         ('Play', MainMenu(WIDTH, HEIGHT, [ 
                                                                                 ('Levels', MainMenu(WIDTH, HEIGHT, [
-                                                                                                                            ('Level 1', Level(WIDTH, HEIGHT, 1))
+                                                                                                                            ('Level 1', Level(WIDTH, HEIGHT, 1)),
+                                                                                                                            ('Level 2', Level(WIDTH, HEIGHT, 2))
                                                                                                                     ])),
                                                                                 ('Endless', Level(WIDTH, HEIGHT, 0))
                                                                          ])),
