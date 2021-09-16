@@ -28,6 +28,8 @@ burrowImg = pygame.image.load('assets/burrow.png')
 mouseImg = pygame.image.load('assets/' + settings['activeSkin'])
 logoImg = pygame.image.load('assets/logo.png')
 ventImg = pygame.image.load('assets/vent.png')
+winImg = pygame.image.load('assets/win_screen.png')
+loseImg = pygame.image.load('assets/lose_screen.png')
 
 
 #Constants
@@ -38,6 +40,7 @@ WHITE = (255, 255, 255)
 RED = (255, 0, 0)
 GREEN = (0, 255, 0)
 DARK_GREEN = (135, 200, 0)
+DARKER_GREEN = (0, 100, 0)
 BOARDX = 160
 BOARDY = 100
 
@@ -106,6 +109,7 @@ class Hexagon(pygame.sprite.Sprite):
                 self.wallPlaceSound.play()
                 self.wall = True # Change the object to a wall 
                 turn = 'M' # Change the turn to the mouse
+            time.sleep(0.1)
 
         #Check if the corresponding state has the correct image
         if self.wall:
@@ -142,6 +146,7 @@ class Board():
     def __init__(self, graph):
         self.graph = graph # Initalise the hexagons
         self.turn = 'P' # Initalise the turn
+        self.turns = 0
 
         #Find the mouse
         for hex in self.graph.nodes: # Iterate through every hexagon
@@ -168,7 +173,8 @@ class Board():
                 self.mouse.mouse = False # Remove mouse from previous hexagon
                 self.mouse = nextHex # Change the next hexagon to the mouse
                 self.mouse.mouse = True # Set next hexagon to have the mouse state
-
+            
+            self.turns += 1
             self.turn = 'P'
 
         #Update every hexagon
@@ -356,11 +362,28 @@ class Level():
         self.init_gameBoard()
         self.game_loop()
 
+    #Check for win condition
+    def win_condition(self, state):
+        if state == 'W':
+            
+            #Display win screen
+            self.screen.blit(winImg, (0, 50))
+            pygame.display.update() 
+            time.sleep(1.1)
+            self.playing = False
+
+        elif state == 'L':
+            #Display win screen
+            self.screen.blit(loseImg, (0, 50))
+            pygame.display.update() 
+            time.sleep(1.1)
+            self.playing = False
+
     #Game Loop
     def game_loop(self):
         while self.playing: # While the game constantly being looped     
             if self.running:   
-                self.screen.fill(BLACK) # Fill the background
+                self.screen.fill(DARKER_GREEN) # Fill the background
 
                 #Check for events
                 for event in pygame.event.get():
@@ -369,18 +392,19 @@ class Level():
 
                 #Update the game board
                 state = self.gameBoard.update()
-                if state == 'W':
-                    print('Win')
-                    self.playing = False
-
-                elif state == 'L':
-                    print('Lose')
-                    self.playing = False
+                self.win_condition(state)                
 
                 #Update the display
-                pygame.display.update() 
+                self.update()
+                
             else:    
-                break 
+                break
+
+    #Update Display
+    def update(self):
+        self.draw_text(f'Turns: {self.gameBoard.turns}', self.font, 24, self.screen, WHITE, 80, 50)
+        pygame.display.update() 
+
 
 
 
