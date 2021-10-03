@@ -9,16 +9,16 @@ import networkx as nx
 
 #Settings
 settings = {} # Initalise the setting values
-fsettings = open('settings.txt', 'r') # Open the setting values
+with open('settings.txt', 'r') as fsettings: # Open the setting values
 
-#Intialise settings
-for line in fsettings.readlines(): # Read the lines of settings.txt
-    name, val = line.split('=') # Split the text into seperate values
-    settings[name] = val.replace('\n', '') # Set the value equal to the settings
+    #Intialise settings
+    for line in fsettings.readlines(): # Read the lines of settings.txt
+        name, val = line.split('=') # Split the text into seperate values
+        settings[name] = val.replace('\n', '') # Set the value equal to the settings
 
 
-#Close files
-fsettings.close()
+
+
 
 #Images
 hexagonImg = pygame.image.load('assets/hexagon.png')
@@ -30,6 +30,7 @@ logoImg = pygame.image.load('assets/logo.png')
 ventImg = pygame.image.load('assets/vent.png')
 winImg = pygame.image.load('assets/win_screen.png')
 loseImg = pygame.image.load('assets/lose_screen.png')
+selectorImg = pygame.image.load('assets/selector.png')
 
 
 #Constants
@@ -43,6 +44,16 @@ DARK_GREEN = (135, 200, 0)
 DARKER_GREEN = (0, 100, 0)
 BOARDX = 160
 BOARDY = 100
+
+bgColour = DARKER_GREEN
+
+#Replace Line
+def replace_line(file_name, line_num, text):
+    lines = open(file_name, 'r').readlines() # Read all the lines
+    lines[line_num] = text # Get the line number
+    out = open(file_name, 'w') # Open file
+    out.writelines(lines) # Rewrite the line
+    out.close() # Close file
 
 
 #------------- Hexagon -------------
@@ -314,6 +325,7 @@ class Level():
             y = BOARDY
 
             A3 = Hexagon(self.screen, x=x, y=y + (yOffset * 1), states=['mouse'])
+            A4 = Hexagon(self.screen, x=x + xOffset, y=y + (yOffset * 1.5))
             B3 = Hexagon(self.screen, x=x, y=y + (yOffset * 2) , states=['burrow'])
             C3 = Hexagon(self.screen, x=x, y=y + (yOffset * 3), states=['burrow'])
             D3 = Hexagon(self.screen, x=x, y=y + (yOffset * 4))
@@ -327,7 +339,8 @@ class Level():
                                              (A3, B3), (B3, C3),
                                              (C3, C2), (C3, C4), (C3, D3),
                                              (D3, C2), (D3, C4),
-                                             (D3, E3), (C2, C1), (C4, C5)
+                                             (D3, E3), (C2, C1), (C4, C5),
+                                             (A4, A3), (A4, B3)
                                          ])
         
         #Level 2
@@ -339,17 +352,32 @@ class Level():
 
             A1 = Hexagon(self.screen, x=x + (xOffset * 0), y=y + (yOffset * 0), states=['mouse'])
             A2 = Hexagon(self.screen, x=x + (xOffset * 1), y=y + (yOffset * 0.5))
-            A3 = Hexagon(self.screen, x=x + (xOffset * 2), y=y + (yOffset * 0))
+            A3 = Hexagon(self.screen, x=x + (xOffset * 2), y=y + (yOffset * 0), states=['hole'])
             B1 = Hexagon(self.screen, x=x + (xOffset * 0), y=y + (yOffset * 1))
             B2 = Hexagon(self.screen, x=x + (xOffset * 1), y=y + (yOffset * 1.5))
             B3 = Hexagon(self.screen, x=x + (xOffset * 2), y=y + (yOffset * 1))
             B4 = Hexagon(self.screen, x=x + (xOffset * 3), y=y + (yOffset * 1.5), states=['hole'])
+            C2 = Hexagon(self.screen, x=x + (xOffset * 1), y=y + (yOffset * 2.5))
+            C3 = Hexagon(self.screen, x=x + (xOffset * 2), y=y + (yOffset * 2))
+            C4 = Hexagon(self.screen, x=x + (xOffset * 3), y=y + (yOffset * 2.5))
+            C5 = Hexagon(self.screen, x=x + (xOffset * 4), y=y + (yOffset * 2))
+            D4 = Hexagon(self.screen, x=x + (xOffset * 3), y=y + (yOffset * 3.5))
+            D5 = Hexagon(self.screen, x=x + (xOffset * 4), y=y + (yOffset * 3))
+            D6 = Hexagon(self.screen, x=x + (xOffset * 5), y=y + (yOffset * 3.5), states=['hole'])
 
             self.hexagons.add_edges_from([
                                              (A1, A2), (A1, B1), 
                                              (A2, B1), (A2, B2), (A2, B3), (A2, A3),
                                              (A3, B3),
-                                             (B1, B2), (B2, B3), (B3, B4) 
+                                             (B1, B2), (B2, B3), (B3, B4),
+                                             (C2, B2), (C2, C3),
+                                             (C3, B2), (C3, B3), (C3, B4), (C3, C4),
+                                             (C4, B4), (C4, C5),
+                                             (C5, B4),
+                                             (D4, C4), (D4, D5),
+                                             (D5, C4), (D5, C5),
+                                             (D6, D5)
+
                                          ])
             
 
@@ -383,7 +411,7 @@ class Level():
     def game_loop(self):
         while self.playing: # While the game constantly being looped     
             if self.running:   
-                self.screen.fill(DARKER_GREEN) # Fill the background
+                self.screen.fill(bgColour) # Fill the background
 
                 #Check for events
                 for event in pygame.event.get():
@@ -450,7 +478,8 @@ class MainMenu():
         for event in pygame.event.get():
             if event.type == pygame.QUIT: # Quit Event
                 self.playing = False
-                pygame.quit() 
+                pygame.quit()
+                SystemExit 
                 
 
         #Check for button events
@@ -526,11 +555,10 @@ class SkinMenu(MainMenu):
         self.playing, self.running = True, True # Store the state of the menu class
         self.screen = pygame.display.set_mode((width, height)) # Display the screen
         self.font = 'freesansbold.ttf' # Initalise the font     
+        self.selectorX, self.selectorY = 0, -128 # Intialse selector position
 
         #Sounds
         self.buttonPressSound = pygame.mixer.Sound('assets/button_press.wav') # Button Press Sound
-        pygame.mixer.music.load('assets/mainmenu.wav') # Main Menu Music
-        pygame.mixer.music.play(-1)
 
         #Skins
         skins = ['A', 'B', 'C', 'D']
@@ -551,16 +579,18 @@ class SkinMenu(MainMenu):
     
     #Update the screen
     def update(self):
+        self.screen.blit(selectorImg, (self.selectorX, self.selectorY))
         self.screen.blit(ventImg, (0, 0))        
         pygame.display.update()
 
     #Check for events
     def check_events(self):        
+        #Check for events
         for event in pygame.event.get():
             if event.type == pygame.QUIT: # Quit Event
                 self.playing = False
-                self.running = False
-                pygame.quit() 
+                pygame.quit()
+                SystemExit  
                 
 
         #Check for button events
@@ -570,11 +600,11 @@ class SkinMenu(MainMenu):
             self.playing = False
 
         aSkins = [pygame.image.load(f'assets/{skin}') for skin in settings['availableSkins'].split(',')]  # Retrieve available skins
-        scaledSkins = [pygame.transform.scale(skin, (128, 128)) for skin in aSkins] # Scale the skins
+        scaledSkins = [pygame.image.load(f'assets/scaled_{skin}') for skin in settings['availableSkins'].split(',')] # Scale the skins
 
         #Place the skins in the correct position
-        x = 100
-        y = 100
+        x = 160
+        y = 80
         for i in range(len(scaledSkins)): # Iterate through all the skins
             if self.button_pressed(self.screen.blit(scaledSkins[i], (x, y))):
                 #Effects
@@ -585,8 +615,97 @@ class SkinMenu(MainMenu):
                 settings['activeSkin'] = aSkins[i]
                 global mouseImg
                 mouseImg = aSkins[i]
+
+                #Rewrite file
+                with open('settings.txt', 'r') as fsettings:
+                    count = 0
+                    for line in fsettings.readlines():
+                        if line[:10] == 'activeSkin':
+                            replace_line('settings.txt', count, f'activeSkin=' + str(settings['availableSkins'].split(',')[i]) + '\n')
+                            break
+                        count += 1
+
+                #Change the position of the selector
+                self.selectorX = x
+                self.selectorY = y
+
             y += 128
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# ---- Settings Menu ----
+class SettingsMenu(MainMenu):
+
+    #Intialise the menu class
+    def __init__(self, width, height):
+        pygame.init() # Initialise the pygame module
+        self.playing, self.running = True, True # Store the state of the menu class
+        self.screen = pygame.display.set_mode((width, height)) # Display the screen
+        self.font = 'freesansbold.ttf' # Initalise the font     
+
+        #Sounds
+        self.buttonPressSound = pygame.mixer.Sound('assets/button_press.wav') # Button Press Sound
+
+
+    #Run the menu
+    def run(self):
+        while self.playing:
+            if self.running:                           
+                self.screen.fill(DARK_GREEN) # Draw the background 
+                self.check_events() # Check events              
+                self.update() # Update the display of the menu
+            else:
+                break
+            
     
+    #Update the screen
+    def update(self):
+        self.screen.blit(ventImg, (0, 0))        
+        pygame.display.update()
+
+    #Check for events
+    def check_events(self):
+        #Global variables
+        global bgColour  
+        
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT: # Quit Event
+                self.playing = False
+                self.running = False
+                pygame.quit() 
+                SystemExit 
+                
+
+        #Check for button events
+        if self.button_pressed(ventImg.get_rect()):
+            time.sleep(0.3)
+            self.buttonPressSound.play()
+            self.playing = False
+
+        #Check for background colours
+        if self.button_pressed(self.button("Green", 300, 100, 210, 95, GREEN)):
+            bgColour = DARKER_GREEN
+            self.buttonPressSound.play()
+            time.sleep(0.3)
+
+        if self.button_pressed(self.button("Red", 300, 200, 210, 95, RED)):
+            bgColour = RED
+            self.buttonPressSound.play()
+            time.sleep(0.3)
+                
       
 
 
@@ -601,6 +720,6 @@ M = MainMenu(WIDTH, HEIGHT, [
                                                                          ])),
 
                                         ('Skins', SkinMenu(WIDTH, HEIGHT)),
-                                        ('Settings', Level(WIDTH, HEIGHT, 1))
+                                        ('Settings', SettingsMenu(WIDTH, HEIGHT))
                             ])
 M.run()
