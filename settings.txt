@@ -1,2 +1,2 @@
-activeSkin=highschool_herobrine.png
+activeSkin=mash.png
 availableSkins=moni.png,mouse.png,mash.png,pirate.png,highschool_herobrine.png

@@ -1,8 +1,6 @@
 #Libraries
 from os import dup2, system
 import pygame
-import random
-import string
 import math
 import time
 import networkx as nx
